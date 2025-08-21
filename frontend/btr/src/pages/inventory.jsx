@@ -115,24 +115,34 @@ export default function InventoryDashboard() {
       try
       {
         // send POST request to backend API for PDF parsing
-        const res = await axios.post("/api/parse-pdf", formData, {
+        const res = await axios.post("http://localhost:8000/api/parse-pdf", formData, {
           headers: {"Content-Type": "multipart/form-data" },
         });
 
-        const firstRow = res.data[0]; // get first row of parsed data
+        const rows = res.data.data; // get first row of parsed data
+
+        // check if rows are empty
+        if(!rows || rows.length === 0)
+          {
+            alert('No data found in the PDF. Please check the file and try again.');
+            return;
+          }
+
+        const firstRow = rows[0]; // get first row of data
+
         setNewItem((prev) => ({
           ...prev,
-          article: firstRow.article,
-          description: firstRow.description,
-          property_ro: firstRow.property_RO,
-          property_co: firstRow.property_CO,
-          semi_expendable_property_no: firstRow.semi_expendable_property_no,
-          unit: firstRow.unit_of_measure,
-          unit_value: Number(firstRow.unit_value),
-          recorded_count: Number(firstRow.quantity_per_property_card),
-          actual_count: Number(firstRow.quantity_per_physical_count),
-          location: firstRow.whereabouts,
-          remarks: firstRow.remarks
+          article: firstRow.article || "",
+          description: firstRow.description || "",
+          property_ro: firstRow.property_RO || "",
+          property_co: firstRow.property_CO || "",
+          semi_expendable_property_no: firstRow.semi_expendable_property_no || "",
+          unit: firstRow.unit_of_measure || "",
+          unit_value: Number(firstRow.unit_value) ? Number(firstRow.unit_value) : 0,
+          recorded_count: Number(firstRow.quantity_per_property_card) ? Number(firstRow.quantity_per_property_card) : 0,
+          actual_count: Number(firstRow.quantity_per_physical_count) ? Number(firstRow.quantity_per_physical_count) : 0,
+          location: firstRow.whereabouts || "",
+          remarks: firstRow.remarks || ""
         }));
 
         setShowPdfModal(false); // close PDF modal

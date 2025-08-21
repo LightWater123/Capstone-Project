@@ -11,9 +11,11 @@ class VerifyCsrfToken extends Middleware
      *
      * @var array<int, string>
      */
+    // Excluding API routes and specific paths from CSRF verification
     protected $except = [
         'api/*',
         'sanctum/csrf-cookie',
+        '/api/parse-pdf',
     ];
 
     protected function tokensMatch($request)

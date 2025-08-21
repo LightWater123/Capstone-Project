@@ -176,6 +176,8 @@ export default function ServiceRegister()
             options={serviceTypes}
           />
 
+      
+
           <button
             type="submit"
             disabled={loading}
