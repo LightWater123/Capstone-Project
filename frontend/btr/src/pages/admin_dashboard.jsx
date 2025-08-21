@@ -35,7 +35,7 @@ export default function AdminDashboard() {
         <button
         onClick={inventoryList} 
         className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition">
-            Inventory
+            Preventive Maintenance
         </button>
       </div>
       </div>

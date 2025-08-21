@@ -1,6 +1,10 @@
 import { useState, useEffect, use } from "react";
 import axios from "../api/axios";
 import Cookie from "js-cookie";
+import ScheduleMaintenanceModal from '../components/modals/sched_maintenance_modal.jsx';
+import TypeSelectorModal from '../components/modals/typeSelectorModal.jsx';
+import AddEquipmentModal from '../components/modals/addEquipmentModal.jsx';
+import UploadPDFModal from '../components/modals/uploadPdfModal.jsx';
 import "../index.css";
 
 
@@ -19,6 +23,9 @@ export default function InventoryDashboard() {
 
   // controls main equipment modal
   const [showModal, setShowModal] = useState(false);
+  // controls schedule maintenance modal
+  const [selectedEquipmentId, setSelectedEquipmentId] = useState(null);
+
 
   // category type selector modal
   const [showTypeSelector, setShowTypeSelector] = useState(false);
@@ -231,226 +238,57 @@ export default function InventoryDashboard() {
         Add Equipment
       </button>
 
-      {/* TYPE SELECTOR MODAL */}
-      {showTypeSelector && (
-        <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50">
-          <div className="bg-white p-6 rounded-lg w-full max-w-md shadow-lg border border-yellow-400">
-            <h2 className="text-xl font-bold text-yellow-700 mb-4">Select Equipment Type</h2>
-            <div className="flex gap-4 justify-center">
-              <button
-                className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
-                onClick={() => {
-                  setCategory("PPE");
-                  setNewItem((prev) => ({ ...prev, category: "PPE" }));
-                  setShowTypeSelector(false);
-                  setShowModal(true);
-                }}
-              >
-                PPE
-              </button>
-              <button
-                className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
-                onClick={() => {
-                  setCategory("RPCSP");
-                  setNewItem((prev) => ({ ...prev, category: "RPCSP" }));
-                  setShowTypeSelector(false);
-                  setShowModal(true);
-                }}
-              >
-                RPCSP
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* SCHEDULE MAINTENANCE BUTTON */}
+      <button className ="bg-green-500 text-white px-4 py-2 rounded-md font-semibold hover:bg-green-600 ml-4">
+          Schedule Maintenance
+      </button>
+      
+      {/* Type selector */}    
+      <TypeSelectorModal
+        isOpen={showTypeSelector}
+        onClose={() => setShowTypeSelector(false)}
+        onSelectType={(type) => {
+        setCategory(type);
+        setNewItem((prev) => ({ ...prev, category: type }));
+        setShowModal(true);
+      }}
+      />
 
       {/* ADD EQUIPMENT FORM MODAL */}
-      {showModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50">
-          <div className="bg-white p-6 rounded-lg w-full max-w-lg shadow-lg border border-yellow-400">
-            <h2 className="text-xl font-bold text-yellow-700 mb-4">Add New {category} Equipment</h2>
-            <form onSubmit={handleSubmit} className="space-y-4 text-black">
-              {/* FORM FIELDS */}
-              <input
-                type="text"
-                placeholder="Article"
-                value={newItem.article}
-                onChange={(e) => setNewItem({ ...newItem, article: e.target.value })}
-                className="w-full px-3 py-2 border border-black rounded bg-yellow-100 placeholder-black"
-                required
-              />
-              <input
-                type="text"
-                placeholder="Description"
-                value={newItem.description}
-                onChange={(e) => setNewItem({ ...newItem, description: e.target.value })}
-                className="w-full px-3 py-2 border border-black rounded bg-yellow-100 placeholder-black"
-              />
-              {category === "PPE" ? (
-                <>
-                  <input
-                    type="text"
-                    placeholder="Property RO"
-                    value={newItem.property_ro}
-                    onChange={(e) => setNewItem({ ...newItem, property_ro: e.target.value })}
-                    className="w-full px-3 py-2 border border-black rounded bg-yellow-100 placeholder-black"
-                    required
-                  />
-                  <input
-                    type="text"
-                    placeholder="Property CO"
-                    value={newItem.property_co}
-                    onChange={(e) => setNewItem({ ...newItem, property_co: e.target.value })}
-                    className="w-full px-3 py-2 border border-black rounded bg-yellow-100 placeholder-black"
-                  />
-                </>
-              ) : (
-                <input
-                  type="text"
-                  placeholder="Semi-Expendable Property No"
-                  value={newItem.semi_expendable_property_no}
-                  onChange={(e) => setNewItem({ ...newItem, semi_expendable_property_no: e.target.value })}
-                  className="w-full px-3 py-2 border border-black rounded bg-yellow-100 placeholder-black"
-                  required
-                />
-              )}
-              <input
-                type="text"
-                placeholder="Unit"
-                value={newItem.unit}
-                onChange={(e) => setNewItem({ ...newItem, unit: e.target.value })}
-                className="w-full px-3 py-2 border border-black rounded bg-yellow-100 placeholder-black"
-                required
-              />
-              <input
-                type="number"
-                placeholder="Unit Value"
-                value={newItem.unit_value === 0 ? '' : newItem.unit_value}
-                onChange={(e) => {
-                  const value = e.target.value === '' ? 0 : Number(e.target.value);
-                  setNewItem({ ...newItem, unit_value: value });
-                }}
-                className="w-full px-3 py-2 border border-black rounded bg-yellow-100 placeholder-black"
-                required
-              />
-              <input
-                type="number"
-                placeholder="Quantity per Property Card"
-                value={newItem.recorded_count === 0 ? '' : newItem.recorded_count}
-                onChange={(e) => {
-                const value = e.target.value === '' ? 0 : Number(e.target.value);
-                setNewItem({ ...newItem, recorded_count: value });
-                }}
-                className="w-full px-3 py-2 border border-black rounded bg-yellow-100 placeholder-black no-spinner"
-                required
-              />
-              <input
-                type="number"
-                placeholder="Quantity per Physical Count"
-                value={newItem.actual_count === 0 ? '' : newItem.actual_count}
-                onChange={(e) => {
-                  const value = e.target.value === '' ? 0 : Number(e.target.value);
-                  setNewItem({ ...newItem, actual_count: value });
-                }}
-                className="w-full px-3 py-2 border border-black rounded bg-yellow-100 placeholder-black"
-                required
-              />
-              <input
-                type="text"
-                placeholder="Location"
-                value={newItem.location}
-                onChange={(e) => setNewItem({ ...newItem, location: e.target.value })}
-                className="w-full px-3 py-2 border border-black rounded bg-yellow-100 placeholder-black"
-                required
-              />
-              <input
-                type="text"
-                placeholder="Remarks"
-                value={newItem.remarks}
-                onChange={(e) => setNewItem({ ...newItem, remarks: e.target.value })}
-                className="w-full px-3 py-2 border border-black rounded bg-yellow-100 placeholder-black"
-              />
-
-              {/* Buttons */}
-              <div className="flex items-center gap-4 pt-2">
-                <button
-                  type="submit"
-                  className="bg-black text-yellow-400 px-4 py-2 rounded hover:bg-yellow-700 hover:text-white"
-                >
-                  Submit
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setShowModal(false);
-                    setNewItem({
-                      category: category,
-                      article: "",
-                      description: "",
-                      property_ro: "",
-                      property_co: "",
-                      semi_expendable_property_no: "",
-                      unit: "pc",
-                      unit_value: 0,
-                      recorded_count: 0,
-                      actual_count: 0,
-                      location: "",
-                      remarks: ""
-                    });
-                  }}
-                  className="text-red-400 hover:underline"
-                >
-                  Cancel
-                </button>
-
-                <button
-                type="button"
-                  onClick={() => {
-                    setShowPdfModal(true);
-                  }}
-                className = "bg-black text-yellow-400 px-4 py-2 rounded hover:bg-yellow-700 hover:text-white"
-                >
-                  Upload PPE/RPCSP PDF
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
+      <AddEquipmentModal
+        isOpen={showModal}
+        category={category}
+        newItem={newItem}
+        setNewItem={setNewItem}
+        onClose={() => {
+          setShowModal(false);
+          setNewItem({
+            category,
+            article: "",
+            description: "",
+            property_ro: "",
+            property_co: "",
+            semi_expendable_property_no: "",
+            unit: "pc",
+            unit_value: 0,
+            recorded_count: 0,
+            actual_count: 0,
+            location: "",
+            remarks: ""
+          });
+        }}
+        onSubmit={handleSubmit}
+        onUploadPDF={() => setShowPdfModal(true)}
+      />
 
       {/* PDF UPLOAD MODAL */}
-      {showPdfModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50">
-          <div className="bg-white p-6 rounded-lg w-full max-w-md shadow-lg border border-blue-400">
-            <h2 className="text-lg font-bold text-blue-700 mb-4">Upload PDF</h2>
-            <form onSubmit={handlePdfUpload} className="space-y-4">
-              <label className ="block text-sm font-medium text-blue-700">Select PDF File</label>
-              <input
-                type="file"
-                accept="application/pdf"
-                onChange={(e) => setPdfFile(e.target.files[0])}
-                className="w-full px-3 py-2 border border-black rounded bg-blue-100 text-black"
-                required
-              />
-              <div className="flex justify-end gap-4 pt-2">
-                <button
-                  type="submit"
-                  className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-700"
-                >
-                  Parse PDF
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setShowPdfModal(false)}
-                  className="text-red-400 hover:underline"
-                >
-                  Cancel
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
+      <UploadPDFModal
+        isOpen={showPdfModal}
+        onClose={() => setShowPdfModal(false)}
+        onSubmit={handlePdfUpload}
+        setPdfFile={setPdfFile}
+      />
+      
     </div>    
 
 
