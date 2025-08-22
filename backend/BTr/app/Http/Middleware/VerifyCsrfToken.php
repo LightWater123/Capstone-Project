@@ -16,6 +16,7 @@ class VerifyCsrfToken extends Middleware
         'api/*',
         'sanctum/csrf-cookie',
         '/api/parse-pdf',
+        
     ];
 
     protected function tokensMatch($request)

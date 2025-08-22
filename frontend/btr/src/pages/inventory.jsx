@@ -120,6 +120,17 @@ export default function InventoryDashboard() {
       });
   };
 
+  // fetch inventory data on initial load
+  const fetchInventory = async () => {
+    try {
+      const res = await axios.get("http://localhost:8000/api/inventory");
+      setInventoryData(res.data);
+    } catch (err) {
+      console.error("Failed to fetch inventory:", err);
+    }
+  };
+
+
   // handle PDF upload and parsing
   const handlePdfUpload = async (e) => 
     {
@@ -427,9 +438,12 @@ export default function InventoryDashboard() {
     isOpen={showEditModal}
     item={selectedItem}
     onClose={() => setShowEditModal(false)}
-    onSave={() => {
+    onSave={ async (updatedItem) => {
       setShowEditModal(false);
-      fetchInventory(); // refresh your table data
+      await fetchInventory(); // refresh your table data
+
+      // update detail modal with new item
+      setSelectedDetailItem(updatedItem);
     }}
     
     />

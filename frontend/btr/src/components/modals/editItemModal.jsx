@@ -1,11 +1,28 @@
 import { useState, useEffect } from 'react';
+import axios from 'axios';
+import Cookie from 'js-cookie';
 
 export default function EditItemModal({ isOpen, item, onClose, onSave }) {
   const [form, setForm] = useState({});
+  axios.defaults.withCredentials = true;
 
   useEffect(() => {
     if (item) setForm(item);
   }, [item]);
+
+  useEffect(() => {
+  axios.get("http://localhost:8000/sanctum/csrf-cookie", {
+    withCredentials: true
+  }).then(() => {
+    const xsrfToken = Cookie.get("XSRF-TOKEN");
+    axios.defaults.headers.common["X-XSRF-TOKEN"] = xsrfToken;
+    axios.defaults.withCredentials = true;
+    console.log("CSRF setup complete (EditItemModal)");
+  }).catch((err) => {
+    console.error("Error setting CSRF cookie:", err);
+  });
+  }, []);
+
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -14,11 +31,15 @@ export default function EditItemModal({ isOpen, item, onClose, onSave }) {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
     try {
-      await axios.put(`/api/inventory/${item.id}`, form); // calls backend api route
-      if (onSave) onSave();
+      const res = await axios.put(`http://localhost:8000/api/inventory/${item.id}`, form); // calls backend api route
+      alert('Item updated successfully!');
+
+      if (onSave) onSave(res.data); // Notify parent to refresh data
       onClose();
     } catch (err) {
+      alert('Error updating item. Please try again.');
       console.error('Error updating item:', err);
     }
   };
@@ -147,9 +168,15 @@ export default function EditItemModal({ isOpen, item, onClose, onSave }) {
               className="w-full border border-black rounded px-3 py-2"
             >
               <option value="">Select Location</option>
-              <option value="Main Office">Main Office</option>
-              <option value="Storage Room">Storage Room</option>
-              <option value="Field Site">Field Site</option>
+              <option value="Main Office">RD's Office</option>
+              <option value="Storage Room">Storage Room</option>  
+              <option value="Conference Room">Conference Room</option>
+              <option value="Auditor's Office">Auditor's Office</option>
+              <option value="Car Port/Garage">Car Port/Garage</option>
+              <option value="CTOO II Office">CTOO II Office</option>
+              <option value="Records Room">Records Room</option>
+              <option value="Outside the building">Outside the building</option>
+              <option value="Within the building">Within the building</option>
             </select>
             <select
               name="condition"
