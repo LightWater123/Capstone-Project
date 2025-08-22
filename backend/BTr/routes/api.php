@@ -11,3 +11,6 @@ use App\Http\Controllers\PdfParserController;
 
     // call parse_pdf.py
     Route::post("/parse-pdf", [PdfParserController::class, 'parse']);
+
+    // edit item
+    Route::put('/inventory/{id}', [EquipmentController::class, 'update']);

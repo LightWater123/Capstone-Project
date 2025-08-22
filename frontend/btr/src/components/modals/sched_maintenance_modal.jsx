@@ -31,7 +31,6 @@ export default function ScheduleMaintenanceModal({ isOpen, onClose, equipmentId,
       onClose();
     } catch (err) {
       console.error('Error scheduling maintenance:', err);
-      // Optional: show toast or error message
     }
   };
 
@@ -39,9 +38,9 @@ export default function ScheduleMaintenanceModal({ isOpen, onClose, equipmentId,
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-      <div className="bg-white rounded-lg shadow-lg w-full max-w-lg mx-4">
+      <div className="bg-white rounded-lg shadow-xl w-full max-w-xl mx-4">
         <div className="flex justify-between items-center border-b px-6 py-4">
-          <h2 className="text-lg font-semibold">Schedule Maintenance</h2>
+          <h2 className="text-xl font-bold text-gray-800">Schedule Maintenance</h2>
           <button
             onClick={onClose}
             className="text-gray-500 hover:text-gray-700 text-2xl leading-none"
@@ -50,47 +49,52 @@ export default function ScheduleMaintenanceModal({ isOpen, onClose, equipmentId,
             &times;
           </button>
         </div>
-        <form onSubmit={handleSubmit} className="px-6 py-4 space-y-4">
-          <input
-            type="text"
-            name="name"
-            value={form.name}
-            onChange={handleChange}
-            placeholder="Name"
-            required
-            className="w-full border rounded px-3 py-2"
-          />
-          <input
-            type="text"
-            name="contact_number"
-            value={form.contact_number}
-            onChange={handleChange}
-            placeholder="Contact Number"
-            className="w-full border rounded px-3 py-2"
-          />
-          <input
-            type="email"
-            name="email"
-            value={form.email}
-            onChange={handleChange}
-            placeholder="Email"
-            className="w-full border rounded px-3 py-2"
-          />
-          <textarea
-            name="message"
-            value={form.message}
-            onChange={handleChange}
-            placeholder="Message"
-            className="w-full border rounded px-3 py-2"
-          />
-          <div className="flex gap-4">
+
+        <form onSubmit={handleSubmit} className="px-6 py-6 space-y-5 text-sm text-gray-800">
+          <div className="space-y-3">
+            <input
+              type="text"
+              name="name"
+              value={form.name}
+              onChange={handleChange}
+              placeholder="Name"
+              required
+              className="w-full border border-black rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+            <input
+              type="text"
+              name="contact_number"
+              value={form.contact_number}
+              onChange={handleChange}
+              placeholder="Contact Number"
+              className="w-full border border-black rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+            <input
+              type="email"
+              name="email"
+              value={form.email}
+              onChange={handleChange}
+              placeholder="Email"
+              className="w-full border border-black rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+            <textarea
+              name="message"
+              value={form.message}
+              onChange={handleChange}
+              placeholder="Message"
+              rows="3"
+              className="w-full border border-black rounded px-3 py-2 resize-none focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
             <input
               type="date"
               name="date"
               value={form.date}
               onChange={handleChange}
               required
-              className="flex-1 border rounded px-3 py-2"
+              className="border border-black rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
             <input
               type="time"
@@ -98,14 +102,15 @@ export default function ScheduleMaintenanceModal({ isOpen, onClose, equipmentId,
               value={form.time}
               onChange={handleChange}
               required
-              className="flex-1 border rounded px-3 py-2"
+              className="border border-black rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
+
           <div className="flex justify-end gap-3 pt-4">
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300"
+              className="px-4 py-2 bg-gray-700 text-white rounded hover:bg-gray-800"
             >
               Cancel
             </button>

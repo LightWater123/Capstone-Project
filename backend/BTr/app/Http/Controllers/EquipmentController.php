@@ -64,6 +64,10 @@ class EquipmentController extends Controller
                 'actual_count'    => ['required', 'numeric', 'min:0'], // actual count of items
                 'remarks'         => ['nullable', 'string'],
                 'location'        => ['required', 'string', Rule::in($this->validLocations)],
+                'condition' => 'nullable|string',
+                'start_date' => 'nullable|date',
+                'end_date' => 'nullable|date',
+
             ]);
 
             
@@ -117,6 +121,9 @@ class EquipmentController extends Controller
                 'actual_count'   => ['sometimes', 'integer', 'min:0'], // actual count of items
                 'remarks'     => ['nullable', 'string'],
                 'location'    => ['sometimes', 'string', Rule::in($this->validLocations)],
+                'condition' => 'nullable|string',
+                'start_date' => 'nullable|date',
+                'end_date' => 'nullable|date',
             ]);
 
             // update field and save

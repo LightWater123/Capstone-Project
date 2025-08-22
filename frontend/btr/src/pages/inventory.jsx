@@ -5,10 +5,15 @@ import ScheduleMaintenanceModal from '../components/modals/sched_maintenance_mod
 import TypeSelectorModal from '../components/modals/typeSelectorModal.jsx';
 import AddEquipmentModal from '../components/modals/addEquipmentModal.jsx';
 import UploadPDFModal from '../components/modals/uploadPdfModal.jsx';
+import ViewFullDetailModal from '../components/modals/fullDetailModal.jsx';
+import EditItemModal from '../components/modals/editItemModal.jsx';
 import "../index.css";
 
 
 export default function InventoryDashboard() {
+  // state for viewing full details
+  const [selectedDetailItem, setSelectedDetailItem] = useState(null);
+  const [showDetailModal, setShowDetailModal] = useState(false);
 
   axios.defaults.withCredentials = true;
 
@@ -24,7 +29,12 @@ export default function InventoryDashboard() {
   // controls main equipment modal
   const [showModal, setShowModal] = useState(false);
   // controls schedule maintenance modal
-  const [selectedEquipmentId, setSelectedEquipmentId] = useState(null);
+  const [selectedEquipmentIds, setSelectedEquipmentIds] = useState([]);
+  const [showScheduleModal, setShowScheduleModal] = useState(false);
+  
+  // controls edit item modal
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [selectedItem, setSelectedItem] = useState(null);
 
 
   // category type selector modal
@@ -239,7 +249,15 @@ export default function InventoryDashboard() {
       </button>
 
       {/* SCHEDULE MAINTENANCE BUTTON */}
-      <button className ="bg-green-500 text-white px-4 py-2 rounded-md font-semibold hover:bg-green-600 ml-4">
+      <button 
+        disabled={selectedEquipmentIds.length === 0}
+        onClick={() => setShowScheduleModal(true)}
+        className={`mt-4 px-4 py-2 rounded-md font-semibold ml-4 ${
+          selectedEquipmentIds.length > 0
+            ? 'bg-green-600 text-white hover:bg-green-700'
+            : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+  }`}
+      >
           Schedule Maintenance
       </button>
       
@@ -299,110 +317,126 @@ export default function InventoryDashboard() {
       ) : (
         <table className="w-full table-auto border border-gray-300">
           <thead className="bg-black-100">
-          <tr>
-            <th className="border px-2 py-1">Article</th>
-            <th className="border px-2 py-1">Description</th>
-            {category === "PPE" ? (
-              <>
-                <th className="border px-2 py-1">Property Number (RO)</th>
-                <th className="border px-2 py-1">Property Number (CO)</th>
-              </>
-            ) : (
-              <>
-                <th className="border px-2 py-1">Semi-Expendable Property No.</th>
-              </>
-            )}
-            <th className="border px-2 py-1">Unit</th>
-            <th className="border px-2 py-1">Unit Value</th>
-            <th className="border px-2 py-1">Quantity per property card</th>
-            <th className="border px-2 py-1">Quantity per physical count</th>
-
-            {/* Grouped header */}
-            <th className="border px-2 py-1 text-center" colSpan="2">Shortage / Overage</th>
-
-            <th className="border px-2 py-1">Location</th>
-            <th className="border px-2 py-1">Remarks</th>
-          </tr>
-          <tr>
-            <th></th>
-            <th></th>
-            {category === "PPE" ? (
-              <>
-                <th></th>
-                <th></th>
-              </>
-            ) : (
-              <>
-                <th></th>
-              </>
-            )}
-            <th></th>
-            <th></th>
-            <th></th>
-            <th></th>
-
-            {/* Sub-columns */}
-            <th className="border px-2 py-1 text-center">Qty</th>
-            <th className="border px-2 py-1 text-center">Value</th>
-
-            <th></th>
-            <th></th>
-          </tr>
-        </thead>
-        <tbody>
-          {filteredData.map((item, index) => (
-            <tr key={index}>
-              <td className="border px-2 py-1 text-center">{item.article}</td>
-              <td className="border px-2 py-1 text-center">{item.description}</td>
-              {item.category === "PPE" ? (
+            <tr>
+              <th className="border px-2 py-1">Article</th>
+              <th className="border px-2 py-1">Description</th>
+              {category === "PPE" ? (
                 <>
-                  <td className="border px-2 py-1 text-center">{item.property_ro}</td>
-                  <td className="border px-2 py-1">
-                    {item.property_co ? item.property_co : <span className="text-gray-400 italic text-center">—</span>}
-                  </td>
+                  <th className="border px-2 py-1">Property Number (RO)</th>
+                  <th className="border px-2 py-1">Property Number (CO)</th>
                 </>
               ) : (
-                <>
-                  <td className="border px-2 py-1 text-center">{item.semi_expendable_property_no}</td>
-                </>
+                <th className="border px-2 py-1">Semi-Expendable Property No.</th>
               )}
-              <td className="border px-2 py-1 text-center">{item.unit}</td>
-              <td className="border px-2 py-1 text-center">₱{Number(item.unit_value).toLocaleString()}</td>
-              <td className="border px-2 py-1 text-center">{item.recorded_count}</td>
-              <td className="border px-2 py-1 text-center">{item.actual_count}</td>
-
-              {/* Qty Diff */}
-              <td className={`border px-2 py-1 text-center ${
-                item.shortage_or_overage_qty < 0
-                  ? 'text-red-600'
-                  : item.shortage_or_overage_qty > 0
-                  ? 'text-green-600'
-                  : 'text-white-500'
-              }`}>
-                {item.shortage_or_overage_qty}
-              </td>
-
-              {/* Value Diff */}
-              <td className={`border px-2 py-1 text-center ${
-                item.shortage_or_overage_val < 0
-                  ? 'text-red-600'
-                  : item.shortage_or_overage_val > 0
-                  ? 'text-green-600'
-                  : 'text-white-500'
-              }`}>
-                {item.shortage_or_overage_val === 0
-                  ? '₱0'
-                  : `${item.shortage_or_overage_val < 0 ? '-' : '+'}₱${Math.abs(item.shortage_or_overage_val).toLocaleString()}`}
-              </td>
-
-              <td className="border px-2 py-1 text-center">{item.location}</td>
-              <td className="border px-2 py-1 text-center">{item.remarks}</td>
+              <th className="border px-2 py-1">Unit</th>
+              <th className="border px-2 py-1">Unit Value</th>
+              <th className="border px-2 py-1">Actions</th>
+              <th className="border px-2 py-1 text-center">
+                <input
+                  type="checkbox"
+                  checked={filteredData.length > 0 && selectedEquipmentIds.length === filteredData.length}
+                  onChange={e => {
+                    if (e.target.checked) {
+                      setSelectedEquipmentIds(filteredData.map(item => item.id));
+                    } else {
+                      setSelectedEquipmentIds([]);
+                    }
+                  }}
+                  className="accent-green-500 w-4 h-4"
+                  title="Select All"
+                />
+              </th>
             </tr>
-          ))}
-        </tbody>
+          </thead>
+          <tbody>
+            {filteredData.map((item, index) => (
+              <tr key={index}>
+                <td className="border px-2 py-1 text-center">{item.article}</td>
+                <td className="border px-2 py-1 text-center">{item.description}</td>
+                {item.category === "PPE" ? (
+                  <>
+                    <td className="border px-2 py-1 text-center">{item.property_ro}</td>
+                    <td className="border px-2 py-1 text-center">
+                      {item.property_co || <span className="text-gray-400 italic">—</span>}
+                    </td>
+                  </>
+                ) : (
+                  <td className="border px-2 py-1 text-center">{item.semi_expendable_property_no}</td>
+                )}
+                <td className="border px-2 py-1 text-center">{item.unit}</td>
+                <td className="border px-2 py-1 text-center">₱{Number(item.unit_value).toLocaleString()}</td>
+                <td className="border px-2 py-1 text-center">
+
+                  <button
+                    className="bg-blue-500 text-white px-2 py-1 rounded hover:bg-blue-600"
+                    onClick={() => {
+                      setSelectedDetailItem(item);
+                      setShowDetailModal(true);
+                    }}
+                  >
+                    View Full Detail
+                  </button>
+                </td>
+                <td className="border px-2 py-1 text-center">
+                  <input
+                    type="checkbox"
+                    checked={selectedEquipmentIds.includes(item.id)}
+                    onChange={e => {
+                      if (e.target.checked) {
+                        setSelectedEquipmentIds(prev => [...prev, item.id]);
+                      } else {
+                        setSelectedEquipmentIds(prev => prev.filter(id => id !== item.id));
+                      }
+                    }}
+                    className="accent-green-500 w-4 h-4"
+                    title="Select for Maintenance"
+                  />
+                </td>
+              </tr>
+            ))}
+          </tbody>
         </table>
       )}
+
+      {/* Schedule Maintenance Modal */}
+      <ScheduleMaintenanceModal
+        isOpen={showScheduleModal}
+        onClose={() => setShowScheduleModal(false)}
+        equipmentIds={selectedEquipmentIds}
+        onSuccess={() => {
+          setShowScheduleModal(false);
+          setSelectedEquipmentIds([]);
+          fetchSchedules(); // optional refresh
+        }}
+      />
+
+    {/* Full Detail Modal */}
+
+    <ViewFullDetailModal
+      isOpen={showDetailModal}
+      item={selectedDetailItem}
+      onClose={() => setShowDetailModal(false)}
+      onEdit={() => {
+        setSelectedItem(selectedDetailItem);
+        setShowEditModal(true);
+  }}
+    />
+
+    {/* Edit item modal */}
+    <EditItemModal
+    isOpen={showEditModal}
+    item={selectedItem}
+    onClose={() => setShowEditModal(false)}
+    onSave={() => {
+      setShowEditModal(false);
+      fetchInventory(); // refresh your table data
+    }}
+    
+    />
+
+
     </div>
+
     </>
   );
 }
