@@ -23,6 +23,9 @@ class Equipment extends Model
         'actual_count', // actual count of items
         'remarks',
         'location',
+        'condition', // optional, can be null
+        'start_date', // optional, can be null
+        'end_date' // optional, can be null
     ];
 
     protected $appends =[

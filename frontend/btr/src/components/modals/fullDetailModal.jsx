@@ -1,4 +1,4 @@
-export default function ViewItemDetailModal({ isOpen, onClose, item, onEdit }) {
+export default function ViewItemDetailModal({ isOpen, onClose, item, onEdit, onDelete}) {
   if (!isOpen || !item) return null;
 
   return (
@@ -28,7 +28,18 @@ export default function ViewItemDetailModal({ isOpen, onClose, item, onEdit }) {
           <div><strong>Shortage/Overage Value:</strong> ₱{item.shortage_or_overage_val}</div>
           <div><strong>Location:</strong> {item.location}</div>
           <div><strong>Remarks:</strong> {item.remarks}</div>
-          <div><strong>Date Added:</strong> {item.date_added || '—'}</div>
+
+          <div>
+             <strong>Date Added:</strong>{" "}
+              {item.date_added
+                ? new Date(item.date_added).toLocaleDateString("en-PH", {
+                    year: "numeric",
+                    month: "long",
+                    day: "numeric"
+                  })
+                : "—"}
+          </div>
+          
           <div><strong>Condition:</strong> {item.condition || '—'}</div>
           <div><strong>Duration before checking:</strong> {item.start_date} to {item.end_date}</div>
         </div>
@@ -43,7 +54,12 @@ export default function ViewItemDetailModal({ isOpen, onClose, item, onEdit }) {
             Edit
           </button>
 
-          <button className="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600 text-sm">Remove</button>
+          <button 
+          className="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600 text-sm"
+          onClick={() => onDelete(item.id)}
+          >
+            Remove
+          </button>
           <button className="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 text-sm">View History</button>
           <button className="px-3 py-1 bg-green-600 text-white rounded hover:bg-green-700 text-sm">Schedule Maintenance</button>
         </div>

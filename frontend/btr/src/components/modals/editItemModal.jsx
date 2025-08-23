@@ -168,7 +168,7 @@ export default function EditItemModal({ isOpen, item, onClose, onSave }) {
               className="w-full border border-black rounded px-3 py-2"
             >
               <option value="">Select Location</option>
-              <option value="Main Office">RD's Office</option>
+              <option value="RD's Office">RD's Office</option>
               <option value="Storage Room">Storage Room</option>  
               <option value="Conference Room">Conference Room</option>
               <option value="Auditor's Office">Auditor's Office</option>

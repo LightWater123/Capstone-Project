@@ -19,6 +19,8 @@ export default function InventoryDashboard() {
 
   // currently selected category (PPE or RPCSP)
   const [category, setCategory] = useState("PPE");
+  // hold fetched inventory data
+  const [activeCategory, setActiveCategory] = useState("PPE");
 
   // fetched inventory data from mongodb
   const [inventoryData, setInventoryData] = useState([]);
@@ -75,62 +77,79 @@ export default function InventoryDashboard() {
   });
 
   // handle submit for adding new inventory item
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault(); // avoid page reload
 
-    // send POST request to backend API
-    axios
-      .post("/api/inventory", newItem)
-      .then((res) => {
-        console.log("Item added successfully:", res.data); // log response for debugging
+    try 
+    {
+      // Send POST request to backend API
+    const res = await axios.post("/api/inventory", newItem);
+    console.log("Item added successfully:", res.data);
 
-        // reset modal and form state
-        setShowModal(false); // close modal
-        setNewItem({ // reset form
-          category: category,
-          article: "",
-          description: "",
-          property_ro: "",
-          property_co: "",
-          semi_expendable_property_no: "", // rpcsp only
-          unit: "pc", // default unit
-          unit_value: 0,
-          recorded_count: 0, // Quantity per Property Card
-          actual_count: 0, // Quantity per Physical Count
-          location:"",
-          remarks: ""
-        });
+    // Reset modal and form state
+    setShowModal(false);
+    setNewItem({
+      category,
+      article: "",
+      description: "",
+      property_ro: "",
+      property_co: "",
+      semi_expendable_property_no: "",
+      unit: "pc",
+      unit_value: 0,
+      recorded_count: 0,
+      actual_count: 0,
+      location: "",
+      remarks: ""
+    });
 
-        // refetch inventory data
-        axios.get(`/api/inventory?category=${category}`) // fetch by category
-          .then((res) => setInventoryData(res.data))
-          .catch((err) => {
-            console.error("Error fetching inventory:", err);
-            setInventoryData([]); // reset data on error
-          });
-      })
-      .catch((err) => {
-        if(err.response && err.response.status === 422) {
-          console.error("Validation error:", err.response.data);
-          alert("Please fill in all required fields correctly.");
-        } else {
-          console.error("Error adding item:", err);
-          alert("An error occurred while adding the item. Please try again.");
-        }
-      });
-  };
-
-  // fetch inventory data on initial load
-  const fetchInventory = async () => {
-    try {
-      const res = await axios.get("http://localhost:8000/api/inventory");
-      setInventoryData(res.data);
-    } catch (err) {
-      console.error("Failed to fetch inventory:", err);
+    // Refresh inventory list using shared fetch function
+    await fetchInventory();
+    } catch (err) 
+    {
+       if (err.response?.status === 422) {
+        console.error("Validation error:", err.response.data);
+        alert("Please fill in all required fields correctly.");
+      } else {
+        console.error("Error adding item:", err);
+        alert("An error occurred while adding the item. Please try again.");
+      }
+      setInventoryData([]); // reset data on error
     }
   };
 
+  // re-fetch inventory data when category changes
+      useEffect(() => {
+        fetchInventory();
+    }, [category]);
+    
+  // fetch inventory data on initial load
+  const fetchInventory = async () => {
+    try {
+      const res = await axios.get(`/api/inventory?category=${category}`);
+      setInventoryData(res.data);
+    } catch (err) {
+      console.error("Failed to fetch inventory:", err);
+      setInventoryData([]); // reset data on error
+    }
+  };
+  
+  // handle delete item
+  const handleDelete = async (id) => 
+    {
+      const confirm = window.confirm("Are you sure you want to delete this item?");
+      if (!confirm) return;
 
+      try 
+      {
+        await axios.delete(`http://localhost:8000/api/inventory/${id}`);
+        alert('Item deleted successfully!');
+      } catch (err) 
+      {
+        alert('Error deleting item. Please try again.');
+        console.error('Error deleting item:', err);
+      }
+    }
   // handle PDF upload and parsing
   const handlePdfUpload = async (e) => 
     {
@@ -182,17 +201,6 @@ export default function InventoryDashboard() {
       }
     };
 
-
-  // fetch inventory data when category changes
-  useEffect(() => {
-    axios
-      .get(`/api/inventory?category=${category}`) // fetch by category
-      .then((res) => setInventoryData(res.data))
-      .catch((err) => {
-        console.error("Error fetching inventory:", err);
-        setInventoryData([]);
-      });
-  }, [category]);
 
   // sync newItem.category with selected category
   useEffect(() => {
@@ -430,7 +438,25 @@ export default function InventoryDashboard() {
       onEdit={() => {
         setSelectedItem(selectedDetailItem);
         setShowEditModal(true);
-  }}
+      }}
+      onDelete={async (id) => {
+        
+        const windowConfirm = window.confirm("Are you sure you want to delete this item?");
+        if (!windowConfirm) return;
+        
+        try 
+        {
+          await axios.delete(`/api/inventory/${id}`);
+          alert('Item deleted successfully!');
+
+          // remove item from inventory data
+          setInventoryData(prev => prev.filter(item => item.id !== id));
+        } catch (err) 
+        {
+          alert('Error deleting item. Please try again.');
+          console.error('Error deleting item:', err);
+        }
+      }}
     />
 
     {/* Edit item modal */}

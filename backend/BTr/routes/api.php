@@ -14,3 +14,6 @@ use App\Http\Controllers\PdfParserController;
 
     // edit item
     Route::put('/inventory/{id}', [EquipmentController::class, 'update']);
+
+    // delete item
+    Route::delete('/inventory/{id}', [EquipmentController::class, 'destroy']);

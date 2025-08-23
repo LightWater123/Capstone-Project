@@ -76,6 +76,7 @@ class EquipmentController extends Controller
             Log::info('Creating new equipment entry', ['data' => $validated]);
             $equipment = new Equipment();
             $equipment->fill($validated);
+            $equipment->date_added = now(); // set date_added to current timestamp
             $equipment->save();
             // return created item to frontend
             return response()->json($equipment, 201);
@@ -146,6 +147,30 @@ class EquipmentController extends Controller
         {
             // log unexpected exceptions and return a generic error response
             Log::error('Equipment update failed', ['exception' => $e]);
+
+            return response()->json([
+                'message' => 'An unexpected error occurred.',
+                'error'   => $e->getMessage() // debug, shows error message
+            ], 500);
+        }
+    }
+
+    public function destroy($id)
+    {
+        try 
+        {
+            // find id through mongodb id
+            $equipment = Equipment::findOrFail($id);
+
+            // delete item
+            $equipment->delete();
+
+            return response()->json(['message' => 'Equipment deleted successfully.'], 200);
+
+        } catch (\Exception $e) 
+        {
+            // log unexpected exceptions and return a generic error response
+            Log::error('Equipment deletion failed', ['exception' => $e]);
 
             return response()->json([
                 'message' => 'An unexpected error occurred.',

@@ -98,14 +98,23 @@ export default function AddEquipmentModal({
             className="w-full px-3 py-2 border border-black rounded bg-yellow-100 placeholder-black"
             required
           />
-          <input
-            type="text"
-            placeholder="Location"
+          <select
             value={newItem.location}
             onChange={(e) => setNewItem({ ...newItem, location: e.target.value })}
-            className="w-full px-3 py-2 border border-black rounded bg-yellow-100 placeholder-black"
+            className="w-full px-3 py-2 border border-black rounded bg-yellow-100 text-black"
             required
-          />
+          >
+            <option value="">Select Location</option>
+            <option value="RD's Office">RD's Office</option>
+            <option value="Storage Room">Storage Room</option>  
+            <option value="Conference Room">Conference Room</option>
+            <option value="Auditor's Office">Auditor's Office</option>
+            <option value="Car Port/Garage">Car Port/Garage</option>
+            <option value="CTOO II Office">CTOO II Office</option>
+            <option value="Records Room">Records Room</option>
+            <option value="Outside the building">Outside the building</option>
+            <option value="Within the building">Within the building</option>
+          </select>
           <input
             type="text"
             placeholder="Remarks"
