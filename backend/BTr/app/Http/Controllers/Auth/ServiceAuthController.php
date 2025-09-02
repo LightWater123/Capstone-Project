@@ -93,15 +93,13 @@ use App\Models\ServiceUser;
 
             // get authenticated service user
             $user = Auth::guard('service_api')->user();
-
-            // create sanctum token
-            $token = $user->createToken('service-token')->plainTextToken;
+            $request->session()->regenerate();
 
             // return logged in user with token
             return response()->json([
                 'message' => 'Login successful',
                 'user'    => array_merge($user->toArray(), ['role' => 'service']),
-                'token'   => $token,
+                
             ]);
             }catch(\Exception $e)
             {
@@ -117,9 +115,10 @@ use App\Models\ServiceUser;
         {
             try{
 
-            // delete current access token
-            $request->user()->currentAccessToken()->delete();
-
+            Auth::guard('service_api')->logout();
+            $request->session()->invalidate();
+            $request->session()->regenerateToken();
+            
             // logout message
             return response()->json([
                 'message' => 'Logged out successfully.',

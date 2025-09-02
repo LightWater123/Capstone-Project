@@ -3,6 +3,7 @@ import { useState } from "react";
 import axios from "axios";
 import Cookie from "js-cookie";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "../context/AuthContext"
 
 export default function Login() {
   const [username, setUsername] = useState("");
@@ -10,6 +11,7 @@ export default function Login() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const { login } = useAuth();
 
 axios.defaults.withCredentials = true;
 
@@ -21,48 +23,61 @@ const handleLogin = async (e) => {
   try {
     // Get CSRF cookie
     await axios.get("http://localhost:8000/sanctum/csrf-cookie", {
-      withCredentials: true
+      withCredentials: true,
     });
 
-    // Get XSRF token from cookies
     const xsrfToken = Cookie.get("XSRF-TOKEN");
     axios.defaults.headers.common["X-XSRF-TOKEN"] = xsrfToken;
 
-    // Send login request
-    const response = await axios.post(
-      "http://localhost:8000/admin/login",
-      { username, password },
-      { withCredentials: true }
-    );
+    // Try admin login
+    try {
+      const adminRes = await axios.post(
+        "http://localhost:8000/admin/login",
+        { username, password },
+        { withCredentials: true }
+      );
 
-    console.log("Login successful:", response.data);
-
-    // Redirect based on user role
-    if (response.data.user.role === "admin") {
-     navigate("/admin/dashboard");
-    } else {
-      navigate("/service/dashboard");
+      const user = adminRes.data.user;
+      login(user);
+      navigate("/admin/dashboard");
+      return;
+    } catch (adminErr) {
+      console.log("Admin login failed, trying service...");
     }
 
-    console.log("Role: ", response.data.user.role);
-    
+    // Try service login
+    try {
+      const serviceRes = await axios.post(
+        "http://localhost:8000/service/login",
+        { username, password },
+        { withCredentials: true }
+      );
+
+      const user = serviceRes.data.user;
+      login(user);
+      navigate("/service/dashboard");
+      console.log("Current role: ", serviceRes.data.user.role);
+      return;
+    } catch (serviceErr) {
+      //console.log("Service login failed.");
+      setError("Invalid credentials for both roles.");
+    }
   } catch (err) {
-    console.error("Login error:", err.response?.data || err.message);
-    setError(
-      err.response?.data?.message || "Login failed. Please try again."
-    );
+    console.error("Login error:", err);
+    setError("Login failed. Please try again.");
   } finally {
     setLoading(false);
   }
 };
 
+
   return (
-    <div className="flex justify-center items-center min-h-screen bg-gray-100">
+    <div className="flex justify-center items-center w-dvw min-h-screen bg-gray-100">
       <form
         onSubmit={handleLogin}
         className="bg-white p-6 rounded shadow-md w-80"
       >
-        <h1 className="text-2xl font-bold mb-4 text-black">Admin Login</h1>
+        <h1 className="text-2xl font-bold mb-4 text-black">Login  </h1>
 
         {error && <p className="text-red-500 mb-3">{error}</p>}
 

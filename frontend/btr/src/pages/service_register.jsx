@@ -37,60 +37,64 @@ export default function ServiceRegister()
     }
   };
 
-  const handleRegister = async(e) => {
+  const getCookie = (name) => {
+    const cookies = document.cookie.split('; ');
+    for (let cookie of cookies) {
+      const [key, value] = cookie.trim().split('=');
+      if (key === name) {
+        return decodeURIComponent(value.trim());
+      }
+    }
+    return null;
+  };
+
+  const handleRegister = async (e) => {
     e.preventDefault();
-    setErrors({}); // clears previous errors
-    setLoading(true); // indicates to the user that something is running
+    setErrors({});
+    setLoading(true);
 
-    // confirm password before sending registration request
-      if(formData.password !== formData.confirm_password)
-        {
-          setErrors(prev => ({
-            ...prev,
-            confirm_password: 'Passwords do not match.',
-          }));
-          setLoading(false);
-          return;
-        }
-        
-    try 
-    {
-      // sanctum requests csrf-cookie to prove the login request is safe
-      await axios.get('/sanctum/csrf-cookie');
+    if (formData.password !== formData.confirm_password) {
+      setErrors(prev => ({
+        ...prev,
+        confirm_password: 'Passwords do not match.',
+      }));
+      setLoading(false);
+      return;
+    }
 
-      // send service registration request to the correct endpoint route::post
-      const response = await axios.post('/api/service/register', {
+    try {
+      await axios.get('/sanctum/csrf-cookie', { withCredentials: true });
+
+      const token = getCookie('XSRF-TOKEN');
+      if (!token) throw new Error('CSRF token not found');
+
+      const response = await axios.post('/service/register', {
         username: formData.username,
         email: formData.email,
         password: formData.password,
         mobile_number: formData.mobile_number,
         address: formData.address,
         service_type: formData.service_type,
-        _token: token, // include CSRF token in the request body
+      }, {
+        headers: {
+          'X-XSRF-TOKEN': token,
+          'Accept': 'application/json',
+          'Content-Type': 'application/json',
+        },
+        withCredentials: true,
       });
 
-      // extract user from response
       const user = response.data.user;
-
-      // redirect based on user role
-      if(user.role === 'service') {
+      if (user.role === 'service') {
         navigate('/service/dashboard');
       } else {
         navigate('/service/login');
       }
-    } 
-    catch(err) 
-    {
-      console.error('Registration error:', err.response?.data); // error log
-      
-      // handle validation errors
-      if (err.response?.data?.errors) 
-      {
+    } catch (err) {
+      console.error('Registration error:', err.response?.data);
+      if (err.response?.data?.errors) {
         setErrors(err.response.data.errors);
-      } 
-      else 
-      {
-        // error message
+      } else {
         alert('Registration failed. Please try again.');
       }
     } finally {
