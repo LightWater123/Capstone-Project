@@ -1,12 +1,15 @@
 <?php
 
+namespace App\Http\Controllers;
+
+use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Auth;
 use App\Models\MaintenanceSchedule;
 use App\Mail\MaintenanceScheduled;
 
-use Illuminate\Http\Request;
 
 class MaintenanceScheduleController extends Controller
 {
@@ -55,11 +58,18 @@ class MaintenanceScheduleController extends Controller
     // for service provider to view their scheduled maintenances
     public function forService(Request $request)
     {
-        $email = $request->query('email');
+        $user = Auth::guard('service_api')->user();
 
-        $schedules = MaintenanceSchedule::where('email', $email)
+        if (!$user) {
+            return response()->json([], 401);
+        }
+        Log::info('Service user:', ['email' => optional($user)->email]);
+
+        $schedules = MaintenanceSchedule::where('email', $user->email)
             ->orderBy('scheduled_date', 'desc')
             ->get();
+
         return response()->json($schedules);
+
     }
 }

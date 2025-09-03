@@ -11,7 +11,7 @@ import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import InventoryDashboard from './pages/inventory.jsx';
 import DirectorDashboard from './pages/director_dashboard.jsx';
 import ServiceMessages from './pages/service_messages.jsx';
-import { AuthProvider } from './context/AuthContext';
+import { AuthProvider } from './context/AuthProvider';
 
 createRoot(document.getElementById('root')).render(
 

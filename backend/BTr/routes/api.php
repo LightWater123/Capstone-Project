@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\EquipmentController;
 use App\Http\Controllers\PdfParserController;
+use App\Http\Controllers\MaintenanceScheduleController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Models\AdminUser;
@@ -25,9 +26,9 @@ use App\Models\ServiceUser;
     // maintenance schedule route
     Route::post('/maintenance-schedule', [MaintenanceScheduleController::class, 'store']);
     // fetch maintenance schedule for admin
-    Route::post('/maintenance-schedule', [MaintenanceScheduleController::class, 'index']);
+    Route::get('/maintenance-schedule', [MaintenanceScheduleController::class, 'index']);
     // fetch maintenance schedule for service provider
-    Route::post('/maintenance-schedule', [MaintenanceScheduleController::class, 'forService']);
+    Route::get('/maintenance-schedule/service', [MaintenanceScheduleController::class, 'forService']);
 
     // returns currently logged-in user
 

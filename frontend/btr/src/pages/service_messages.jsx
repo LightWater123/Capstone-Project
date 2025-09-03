@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext'; 
+import { useAuth } from '../context/AuthProvider';
 
 export default function ServiceMessages() {
   const location = useLocation(); // Get navigation state from previous route
@@ -8,7 +8,7 @@ export default function ServiceMessages() {
   const { user } = useAuth();
 
   // Extract serviceEmail from route state, fallback to default if not provided
-  const serviceEmail = location.state?.serviceEmail || 'maintenance@company.com';
+  const serviceEmail = user?.email || 'maintenance@company.com';
 
   const [messages, setMessages] = useState([]); // Store fetched messages
   const [loading, setLoading] = useState(true);

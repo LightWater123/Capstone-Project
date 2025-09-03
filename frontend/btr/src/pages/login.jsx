@@ -3,7 +3,7 @@ import { useState } from "react";
 import axios from "axios";
 import Cookie from "js-cookie";
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "../context/AuthContext"
+import { useAuth } from '../context/AuthProvider';
 
 export default function Login() {
   const [username, setUsername] = useState("");
@@ -56,6 +56,7 @@ const handleLogin = async (e) => {
       const user = serviceRes.data.user;
       login(user);
       navigate("/service/dashboard");
+      console.log("Login Success, Current user: ", serviceRes.data.user.username);
       console.log("Current role: ", serviceRes.data.user.role);
       return;
     } catch (serviceErr) {
