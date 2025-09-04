@@ -15,37 +15,47 @@ class MaintenanceScheduleController extends Controller
 {
     public function store(Request $request)
     {
-        // Validate incoming request data
+        // validate incoming request data
         $validated = $request->validate([
-            'equipment_id' => 'required|string',
-            'scheduled_date' => 'required|date',
-            'contact_name' => 'required|string|max:255',
-            'contact_number' => 'required|string|max:20',
-            'email' => 'required|email|max:255',
-            'notes' => 'nullable|string',
-            'status' => 'required|string|in:pending,completed,cancelled',
-        ]);
+        'equipment_id' => 'required|string',
+        'scheduled_date' => 'required|date',
+        'contact_name' => 'required|string|max:255',
+        'contact_number' => 'required|string|max:20',
+        'email' => 'required|email|max:255',
+        'notes' => 'nullable|string',
+    ]);
 
-        // Create new maintenance schedule entry
-        $schedule = MaintenanceSchedule::create($validated);
+    // If the email belongs to a service user, normalize it to their account email
+    $serviceUser = \App\Models\User::where('email', $validated['email'])
+        ->where('role', 'service') // adjust if you have a role column
+        ->first();
 
-        try 
-        {
-            // Send email notification
-            Mail::to($validated['email'])->send(new MaintenanceScheduled($validated));
-        } catch (\Exception $e) 
-        {
-            Log::error('Failed to send maintenance schedule email: ' . $e->getMessage());
-            
-            return response () -> json([
-                'message' => 'Maintenance schedule created but failed to send email.', 
-                'data' => $schedule,
-                'error' => $e->getMessage(),
-            ], 202);
-        }
-        
+    if ($serviceUser) {
+        $validated['email'] = $serviceUser->email; // exact match from DB
+    }
 
-        return response()->json(['message' => 'Maintenance schedule created and email sent.', 'data' => $schedule], 201);
+    $validated['status'] = 'pending';
+
+    $schedule = MaintenanceSchedule::create($validated);
+
+    // Log the email that was stored
+    
+    Log::info('Schedule created for email:', ['email' => $schedule->email]);
+    try {
+        Mail::to($validated['email'])->send(new MaintenanceScheduled($validated));
+    } catch (\Exception $e) {
+        Log::error('Failed to send maintenance schedule email: ' . $e->getMessage());
+        return response()->json([
+            'message' => 'Maintenance schedule created but failed to send email.',
+            'data' => $schedule,
+            'error' => $e->getMessage(),
+        ], 202);
+    }
+
+    return response()->json([
+        'message' => 'Maintenance schedule created and email sent.',
+        'data' => $schedule
+    ], 201);
     }
 
     // display messages to the frontend

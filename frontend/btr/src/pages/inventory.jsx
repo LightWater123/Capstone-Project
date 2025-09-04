@@ -15,6 +15,9 @@ export default function InventoryDashboard() {
   const [selectedDetailItem, setSelectedDetailItem] = useState(null);
   const [showDetailModal, setShowDetailModal] = useState(false);
 
+  // add modal
+  const [showAddModal, setShowAddModal] = useState(false);
+
   axios.defaults.withCredentials = true;
 
   // currently selected category (PPE or RPCSP)
@@ -38,6 +41,8 @@ export default function InventoryDashboard() {
   const [showEditModal, setShowEditModal] = useState(false);
   const [selectedItem, setSelectedItem] = useState(null);
 
+  // store maintenance schedules
+  const [maintenanceSchedules, setMaintenanceSchedules] = useState([]);
 
   // category type selector modal
   const [showTypeSelector, setShowTypeSelector] = useState(false);
@@ -122,6 +127,11 @@ export default function InventoryDashboard() {
       useEffect(() => {
         fetchInventory();
     }, [category]);
+
+  // fetch schedules on initial load
+      useEffect(() => {
+        fetchSchedules();
+      }, []);
     
   // fetch inventory data on initial load
   const fetchInventory = async () => {
@@ -150,56 +160,88 @@ export default function InventoryDashboard() {
         console.error('Error deleting item:', err);
       }
     }
-  // handle PDF upload and parsing
-  const handlePdfUpload = async (e) => 
-    {
-      e.preventDefault(); // prevent default form submission
 
-      const formData = new FormData();
-      formData.append("pdf", pdfFile);
-      formData.append("mode", category); // add mode (PPE or RPCSP)
-
-      try
-      {
-        // send POST request to backend API for PDF parsing
-        const res = await axios.post("http://localhost:8000/api/parse-pdf", formData, {
-          headers: {"Content-Type": "multipart/form-data" },
+    // fetch maintenance schedules
+    const fetchSchedules = async () => {
+      try {
+        const res = await axios.get('http://localhost:8000/api/maintenance-schedule', {
+          withCredentials: true,
         });
-
-        const rows = res.data.data; // get first row of parsed data
-
-        // check if rows are empty
-        if(!rows || rows.length === 0)
-          {
-            alert('No data found in the PDF. Please check the file and try again.');
-            return;
-          }
-
-        const firstRow = rows[0]; // get first row of data
-
-        setNewItem((prev) => ({
-          ...prev,
-          article: firstRow.article || "",
-          description: firstRow.description || "",
-          property_ro: firstRow.property_RO || "",
-          property_co: firstRow.property_CO || "",
-          semi_expendable_property_no: firstRow.semi_expendable_property_no || "",
-          unit: firstRow.unit_of_measure || "",
-          unit_value: Number(firstRow.unit_value) ? Number(firstRow.unit_value) : 0,
-          recorded_count: Number(firstRow.quantity_per_property_card) ? Number(firstRow.quantity_per_property_card) : 0,
-          actual_count: Number(firstRow.quantity_per_physical_count) ? Number(firstRow.quantity_per_physical_count) : 0,
-          location: firstRow.whereabouts || "",
-          remarks: firstRow.remarks || ""
-        }));
-
-        setShowPdfModal(false); // close PDF modal
-
-      } catch (err) 
-      {
-        console.error("PDF parse error: ", err);
-        alert("An error occurred while parsing the PDF. Please try again.");
+        setMaintenanceSchedules(res.data);
+      } catch (err) {
+        console.error("Failed to fetch maintenance schedules:", err);
+        setMaintenanceSchedules([]);
       }
     };
+
+  // handle PDF upload and parsing
+  const handlePdfUpload = async (e) => {
+  e.preventDefault();
+
+  const formData = new FormData();
+  formData.append("pdf", pdfFile);
+  formData.append("mode", category); // PPE or RPCSP
+
+  try {
+    const res = await axios.post("http://localhost:8000/api/parse-pdf", formData, {
+      headers: { "Content-Type": "multipart/form-data" },
+    });
+
+    const rows = res.data.data;
+
+    if (!rows || rows.length === 0) {
+      alert('No data found in the PDF. Please check the file and try again.');
+      return;
+    }
+
+    // Optional: set first row to preview in form
+    const firstRow = rows[0];
+    setNewItem((prev) => ({
+      ...prev,
+      article: firstRow.article || "",
+      description: firstRow.description || "",
+      property_ro: firstRow.property_RO || "",
+      property_co: firstRow.property_CO || "",
+      semi_expendable_property_no: firstRow.semi_expendable_property_no || "",
+      unit: firstRow.unit_of_measure || "",
+      unit_value: Number(firstRow.unit_value) || 0,
+      recorded_count: Number(firstRow.quantity_per_property_card) || 0,
+      actual_count: Number(firstRow.quantity_per_physical_count) || 0,
+      location: firstRow.whereabouts || "",
+      remarks: firstRow.remarks || ""
+    }));
+
+    // Push all parsed rows into inventory
+    const formattedItems = rows.map((row, index) => ({
+      id: Date.now() + index, // or use a UUID if available
+      category,
+      article: row.article || "",
+      description: row.description || "",
+      property_ro: row.property_RO || "",
+      property_co: row.property_CO || "",
+      semi_expendable_property_no: row.semi_expendable_property_no || "",
+      unit: row.unit_of_measure || "",
+      unit_value: Number(row.unit_value) || 0,
+      recorded_count: Number(row.quantity_per_property_card) || 0,
+      actual_count: Number(row.quantity_per_physical_count) || 0,
+      location: row.whereabouts || "",
+      remarks: row.remarks || ""
+    }));
+
+    setInventoryData(prev => [...prev, ...formattedItems]);
+
+    // Optional: re-filter if you're using filteredData
+    // setFilteredData(updatedFilteredData);
+
+    setShowPdfModal(false); // close pdf modal
+    setShowModal(false); // close modal
+    alert("PDF uploaded and inventory updated!");
+
+  } catch (err) {
+    console.error("PDF parse error: ", err);
+    alert("An error occurred while parsing the PDF. Please try again.");
+  }
+};
 
 
   // sync newItem.category with selected category
@@ -421,7 +463,7 @@ export default function InventoryDashboard() {
       <ScheduleMaintenanceModal
         isOpen={showScheduleModal}
         onClose={() => setShowScheduleModal(false)}
-        equipmentIds={selectedEquipmentIds}
+        equipmentId={selectedEquipmentIds[0]}
         onSuccess={() => {
           setShowScheduleModal(false);
           setSelectedEquipmentIds([]);
@@ -439,6 +481,7 @@ export default function InventoryDashboard() {
         setSelectedItem(selectedDetailItem);
         setShowEditModal(true);
       }}
+
       onDelete={async (id) => {
         
         const windowConfirm = window.confirm("Are you sure you want to delete this item?");
@@ -451,6 +494,9 @@ export default function InventoryDashboard() {
 
           // remove item from inventory data
           setInventoryData(prev => prev.filter(item => item.id !== id));
+
+          // close modal
+          setShowDetailModal(false);
         } catch (err) 
         {
           alert('Error deleting item. Please try again.');
@@ -477,6 +523,18 @@ export default function InventoryDashboard() {
 
     </div>
 
+    {maintenanceSchedules.map(schedule => (
+      <div key={schedule.id} className="border p-3 mb-2 rounded">
+        <p><strong>Equipment ID:</strong> {schedule.equipment_id}</p>
+        <p><strong>Date:</strong> {schedule.scheduled_date}</p>
+        <p><strong>Contact:</strong> {schedule.contact_name} ({schedule.email})</p>
+        <p><strong>Notes:</strong> {schedule.notes}</p>
+        <p><strong>Status:</strong> {schedule.status}</p>
+      </div>
+    ))}
+
     </>
   );
+
+  
 }

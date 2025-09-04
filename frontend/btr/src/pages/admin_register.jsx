@@ -94,9 +94,9 @@
 
         // redirect based on user role
         if(user.role === 'admin') {
-          navigate('/admin/dashboard');
+          navigate('/login');
         } else {
-          navigate('/admin/login');
+          navigate('/login');
         }
       } 
       catch(err) {

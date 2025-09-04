@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import DatePicker from 'react-datepicker';
+import axios from 'axios';
+import { format } from 'date-fns';
 import 'react-datepicker/dist/react-datepicker.css';
 
 export default function ScheduleMaintenanceModal({ isOpen, onClose, equipmentId, onSuccess }) {
@@ -12,6 +13,8 @@ export default function ScheduleMaintenanceModal({ isOpen, onClose, equipmentId,
     time: '',
   });
 
+  const [submitError, setSubmitError] = useState('');
+
   const handleChange = (e) => {
     const { name, value } = e.target;
     setForm(prev => ({ ...prev, [name]: value }));
@@ -19,20 +22,37 @@ export default function ScheduleMaintenanceModal({ isOpen, onClose, equipmentId,
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setSubmitError('');
+
+    if (!equipmentId) {
+      setSubmitError('No equipment selected.');
+      return;
+    }
+
     try {
+      const scheduledDate = format(new Date(`${form.date}T${form.time}`), 'yyyy-MM-dd HH:mm:ss');
+
       const payload = {
         equipment_id: equipmentId,
-        scheduled_date: `${form.date} ${form.time}`,
+        scheduled_date: scheduledDate,
         contact_name: form.name,
         contact_number: form.contact_number,
-        contact_email: form.email,
+        email: form.email,
         notes: form.message,
       };
-      await axios.post('/api/maintenance-schedules', payload);
+
+      console.log('Submitting payload:', payload); // ✅ Debug log
+
+      await axios.post('http://localhost:8000/api/maintenance-schedule', payload, {
+        withCredentials: true,
+      });
+
+      alert('Maintenance scheduled successfully!');
       if (onSuccess) onSuccess();
       onClose();
     } catch (err) {
-      console.error('Error scheduling maintenance:', err);
+      console.error('Validation errors:', err.response?.data?.errors || err.message);
+      setSubmitError(err.response?.data?.message || 'Something went wrong.');
     }
   };
 
@@ -69,6 +89,7 @@ export default function ScheduleMaintenanceModal({ isOpen, onClose, equipmentId,
               value={form.contact_number}
               onChange={handleChange}
               placeholder="Contact Number"
+              required
               className="w-full border border-black rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
             <input
@@ -77,6 +98,7 @@ export default function ScheduleMaintenanceModal({ isOpen, onClose, equipmentId,
               value={form.email}
               onChange={handleChange}
               placeholder="Email"
+              required
               className="w-full border border-black rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
             <textarea
@@ -107,6 +129,8 @@ export default function ScheduleMaintenanceModal({ isOpen, onClose, equipmentId,
               className="border border-black rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
+
+          {submitError && <p className="text-red-600 text-sm">{submitError}</p>}
 
           <div className="flex justify-end gap-3 pt-4">
             <button
